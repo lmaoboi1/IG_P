@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Profile View</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #f3f4f6; /* Gray background outside the phone area */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        .phone-container {
+            width: 100%;
+            max-width: 430px; /* Typical large phone width */
+            height: 100vh;
+            max-height: 932px; /* Typical large phone height */
+            background-color: #ffffff;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+
+        /* For desktop viewing, make it look a bit more like a device */
+        @media (min-width: 450px) {
+            .phone-container {
+                height: 90vh;
+                border-radius: 40px;
+                border: 8px solid #1f2937; /* Dark border resembling a phone case */
+            }
+        }
+        
+        img {
+            width: 100%;
+            display: block;
+            object-fit: contain;
+            pointer-events: none; /* Prevent accidental dragging of images */
+        }
+        
+        .layout-header {
+            flex-shrink: 0; /* Prevent header from shrinking */
+            width: 100%;
+            z-index: 10;
+        }
+
+        .layout-main {
+            flex-grow: 1; /* Allow main content area to fill available space */
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start; /* Align content to the top of the main area */
+            align-items: center;
+            background-color: #f5f6f8; /* Light gray for pull-to-refresh background */
+            overflow-y: auto; /* Allow scrolling if content is too tall */
+            width: 100%;
+            position: relative; /* Added for pull-to-refresh positioning */
+            /* Hide scrollbar for cleaner look */
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        
+        .layout-main::-webkit-scrollbar {
+            display: none;
+        }
+
+        .ptr-indicator {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 70px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1;
+        }
+
+        .spinner {
+            width: 28px;
+            height: 28px;
+            border: 2px solid #dbdbdb;
+            border-top-color: #262626;
+            border-radius: 50%;
+            opacity: 0;
+            transform: rotate(0deg);
+        }
+
+        .spinner.loading {
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .scroll-content {
+            background-color: #ffffff;
+            width: 100%;
+            min-height: 100%;
+            position: relative;
+            z-index: 2;
+            transform: translateY(0);
+        }
+
+        .posts-cover {
+            position: absolute;
+            background-color: #ffffff; 
+            /* POSITIONING: Adjust these percentage values to perfectly align the box */
+            top: 6.6%; /* Move up/down */
+            left: 29.0%;  /* Move left/right - Estimated position for posts */
+            
+            /* SIZING: Adjust width/height if it clips the text or shows the original number */
+            width: 28px; 
+            height: 20px; 
+            
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            
+            /* TYPOGRAPHY */
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-weight: 500; 
+            font-size: 16.5px; 
+            color: #000000;
+            line-height: 1;
+            letter-spacing: -0.2px;
+            
+            z-index: 5; 
+            /* border: 1px solid red; /* UNCOMMENT THIS LINE to see the box while positioning */
+        }
+
+        .followers-cover {
+            position: absolute;
+            background-color: #ffffff; 
+            /* POSITIONING: Adjust these percentage values to perfectly align the box */
+            top: 6.6%; /* Move up/down */
+            left: 47.5%;  /* Move left/right */
+            
+            /* SIZING: Adjust width/height if it clips the text or shows the original number */
+            width: 28px; 
+            height: 20px; 
+            
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            
+            /* TYPOGRAPHY: Matched to the original screenshot */
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-weight: 500; /* Thinner than before to match the reference */
+            font-size: 16.5px; /* Slightly larger for better proportions */
+            color: #000000;
+            line-height: 1;
+            letter-spacing: -0.2px;
+            
+            z-index: 5; 
+            /* border: 1px solid red; /* UNCOMMENT THIS LINE to see the box while positioning */
+        }
+
+        .following-cover {
+            position: absolute;
+            background-color: #ffffff; 
+            /* POSITIONING: Adjust these percentage values to perfectly align the box */
+            top: 6.6%; /* Move up/down */
+            left: 71.5%;  /* Move left/right - Estimated position for following */
+            
+            /* SIZING: Adjust width/height if it clips the text or shows the original number */
+            width: 28px; 
+            height: 20px; 
+            
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            
+            /* TYPOGRAPHY */
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-weight: 500; 
+            font-size: 16.5px; 
+            color: #000000;
+            line-height: 1;
+            letter-spacing: -0.2px;
+            
+            z-index: 5; 
+            /* border: 1px solid red; /* UNCOMMENT THIS LINE to see the box while positioning */
+        }
+
+        .layout-footer {
+            flex-shrink: 0; /* Prevent footer from shrinking */
+            width: 100%;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="phone-container">
+        
+        <!-- Header Section -->
+        <div class="layout-header">
+            <img src="https://i.ibb.co/chd0cftG/head-ig.png" alt="Header Navigation">
+        </div>
+
+        <!-- Main Body Section -->
+        <div class="layout-main" id="layoutMain">
+            <div class="ptr-indicator">
+                <div class="spinner" id="spinner"></div>
+            </div>
+            
+            <div class="scroll-content" id="scrollContent">
+                <!-- Ensure the main image scales appropriately but stays anchored to the top of this section -->
+                <img src="https://i.ibb.co/FLN1GsX2/main-iq.png" alt="Main Content Area" style="height: auto; max-height: 100%;">
+                
+                <div class="posts-cover" id="postsCount">
+                    0
+                </div>
+                
+                <div class="followers-cover" id="followersCount">
+                    0
+                </div>
+                
+                <div class="following-cover" id="followingCount">
+                    0
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer Section -->
+        <div class="layout-footer">
+            <img src="https://i.ibb.co/j9zkdvKM/foot-ig.png" alt="Bottom Navigation bar">
+        </div>
+
+    </div>
+
+    <script>
+        const main = document.getElementById('layoutMain');
+        const scrollContent = document.getElementById('scrollContent');
+        const spinner = document.getElementById('spinner');
+        const followersElement = document.getElementById('followersCount');
+        const postsElement = document.getElementById('postsCount');
+        const followingElement = document.getElementById('followingCount');
+
+        let startY = 0;
+        let currentY = 0;
+        let isPulling = false;
+        let isRefreshing = false;
+        
+        let currentFollowers = 0;
+        let refreshCount = 0;
+        
+        // Hardcoded initial values for posts and following
+        postsElement.textContent = "0";
+        followingElement.textContent = "0";
+
+        function formatNumber(num) {
+            if (num >= 1000000) {
+                return (num / 1000000).toFixed(1).replace('.', ',').replace(/,0$/, '') + ' M';
+            }
+            if (num >= 1000) {
+                return (num / 1000).toFixed(1).replace('.', ',').replace(/,0$/, '') + ' K';
+            }
+            return num.toString();
+        }
+
+        function getFollowerGain() {
+            refreshCount++;
+            
+            // Speeding up the progression significantly
+            let baseGain = 100; 
+            
+            // More aggressive multiplier to reach higher numbers faster
+            let multiplier = Math.pow(3.5, refreshCount); 
+            
+            // Calculate rough gain
+            let rawGain = baseGain * multiplier;
+            
+            // Add some randomness (±20%)
+            let randomFactor = 0.8 + (Math.random() * 0.4);
+            let finalGain = Math.floor(rawGain * randomFactor);
+            
+            // Cap the max gain per pull to around 500k
+            if (finalGain > 500000) {
+                finalGain = 450000 + Math.floor(Math.random() * 100000); // 450k - 550k
+            }
+            
+            // Ensure minimum gain
+            if (finalGain < 1) finalGain = 1;
+            
+            return finalGain;
+        }
+
+        // Helper to get Y coordinate for both touch and mouse events
+        function getClientY(e) {
+            return e.touches ? e.touches[0].clientY : e.clientY;
+        }
+
+        function handleStart(e) {
+            // Only allow pull-to-refresh if we are at the very top of the scrolling area
+            if (main.scrollTop === 0 && !isRefreshing) {
+                startY = getClientY(e);
+                isPulling = true;
+                scrollContent.style.transition = 'none'; // Disable transition for instant drag following
+            }
+        }
+
+        function handleMove(e) {
+            if (!isPulling || isRefreshing) return;
+
+            currentY = getClientY(e);
+            let diff = currentY - startY;
+
+            // If pulling downwards
+            if (diff > 0) {
+                // Prevent normal scroll behavior while dragging down
+                if (e.cancelable) {
+                    e.preventDefault(); 
+                }
+                
+                // Add friction to the pull distance and limit the max distance
+                let pullDistance = Math.min(diff * 0.4, 120); 
+                scrollContent.style.transform = `translateY(${pullDistance}px)`;
+
+                // Animate spinner opacity and rotation based on drag distance
+                spinner.style.opacity = Math.min(pullDistance / 60, 1);
+                spinner.style.transform = `rotate(${pullDistance * 4}deg)`;
+            }
+        }
+
+        function handleEnd(e) {
+            if (!isPulling || isRefreshing) return;
+            isPulling = false;
+
+            let diff = currentY - startY;
+            let pullDistance = diff * 0.4;
+
+            // Add smooth transition for snapping back or holding refresh position
+            scrollContent.style.transition = 'transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1)';
+
+            if (pullDistance >= 60) {
+                // Threshold met: trigger refresh state
+                isRefreshing = true;
+                scrollContent.style.transform = `translateY(60px)`;
+                spinner.classList.add('loading');
+
+                // Simulate a network request (0.6 to 1.2 seconds)
+                let loadTime = 600 + Math.random() * 600;
+                
+                setTimeout(() => {
+                    // Update follower count
+                    let gain = getFollowerGain();
+                    currentFollowers += gain;
+                    
+                    // Update DOM
+                    followersElement.textContent = formatNumber(currentFollowers);
+                    
+                    // Snap back
+                    scrollContent.style.transform = `translateY(0px)`;
+                    spinner.classList.remove('loading');
+                    
+                    // Wait for snap back transition to finish before fully resetting
+                    setTimeout(() => {
+                        spinner.style.opacity = 0;
+                        isRefreshing = false;
+                        currentY = startY; 
+                    }, 300);
+                }, loadTime);
+            } else {
+                // Threshold not met: snap back to original position
+                scrollContent.style.transform = `translateY(0px)`;
+                spinner.style.opacity = 0;
+            }
+        }
+
+        // Touch event listeners for mobile devices
+        main.addEventListener('touchstart', handleStart, { passive: true });
+        main.addEventListener('touchmove', handleMove, { passive: false });
+        main.addEventListener('touchend', handleEnd);
+        main.addEventListener('touchcancel', handleEnd);
+
+        // Mouse event listeners for desktop testing
+        main.addEventListener('mousedown', handleStart);
+        main.addEventListener('mousemove', handleMove);
+        window.addEventListener('mouseup', handleEnd); 
+    </script>
+</body>
+</html>
